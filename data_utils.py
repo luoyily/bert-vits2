@@ -8,8 +8,35 @@ import commons
 from mel_processing import spectrogram_torch, mel_spectrogram_torch
 from utils import load_wav_to_torch, load_filepaths_and_text
 from text import cleaned_text_to_sequence
-
+import h5py
 """Multi speaker version"""
+
+
+class FolderDataset(torch.utils.data.Dataset):
+    def __init__(self, folders=[]) -> None:
+        super().__init__()
+        self.datas = []
+        for folder in folders:
+            self.datas += [os.path.join(folder, fn)for fn in os.listdir(folder) if fn.endswith('h5')]
+
+    def __getitem__(self, index):
+        h5_path = self.datas[index]
+        with h5py.File(h5_path, 'r') as data:
+            phones = torch.LongTensor(data['phones'][:])
+            spec = torch.FloatTensor(data['spec'][:])
+            wav = torch.FloatTensor(data['wav'][:])
+            sid = torch.LongTensor(data['sid'][:])
+            tone = torch.LongTensor(data['tone'][:])
+            language = torch.LongTensor(data['language'][:])
+
+            berts = [torch.zeros(1024, len(phones)) for i in range(3)]
+            berts[data['language_id'][:][0]] = torch.FloatTensor(data['bert'][:])
+            bert, ja_bert, en_bert = tuple(berts)
+
+        return (phones, spec, wav, sid, tone, language, bert, ja_bert, en_bert)
+
+    def __len__(self):
+        return len(self.datas)
 
 
 class TextAudioSpeakerLoader(torch.utils.data.Dataset):
@@ -69,7 +96,8 @@ class TextAudioSpeakerLoader(torch.utils.data.Dataset):
                 audiopaths_sid_text_new.append(
                     [audiopath, spk, language, text, phones, tone, word2ph]
                 )
-                lengths.append(os.path.getsize(audiopath) // (2 * self.hop_length))
+                lengths.append(os.path.getsize(audiopath) //
+                               (2 * self.hop_length))
             else:
                 skipped += 1
         logger.info(
@@ -135,7 +163,8 @@ class TextAudioSpeakerLoader(torch.utils.data.Dataset):
         return spec, audio_norm
 
     def get_text(self, text, word2ph, phone, tone, language_str, wav_path):
-        phone, tone, language = cleaned_text_to_sequence(phone, tone, language_str)
+        phone, tone, language = cleaned_text_to_sequence(
+            phone, tone, language_str)
         if self.add_blank:
             phone = commons.intersperse(phone, 0)
             tone = commons.intersperse(tone, 0)
@@ -226,7 +255,8 @@ class TextAudioSpeakerCollate:
         ja_bert_padded = torch.FloatTensor(len(batch), 1024, max_text_len)
         en_bert_padded = torch.FloatTensor(len(batch), 1024, max_text_len)
 
-        spec_padded = torch.FloatTensor(len(batch), batch[0][1].size(0), max_spec_len)
+        spec_padded = torch.FloatTensor(
+            len(batch), batch[0][1].size(0), max_spec_len)
         wav_padded = torch.FloatTensor(len(batch), 1, max_wav_len)
         text_padded.zero_()
         tone_padded.zero_()
@@ -353,7 +383,8 @@ class DistributedBucketSampler(torch.utils.data.distributed.DistributedSampler):
         indices = []
         if self.shuffle:
             for bucket in self.buckets:
-                indices.append(torch.randperm(len(bucket), generator=g).tolist())
+                indices.append(torch.randperm(
+                    len(bucket), generator=g).tolist())
         else:
             for bucket in self.buckets:
                 indices.append(list(range(len(bucket))))
@@ -376,14 +407,14 @@ class DistributedBucketSampler(torch.utils.data.distributed.DistributedSampler):
             )
 
             # subsample
-            ids_bucket = ids_bucket[self.rank :: self.num_replicas]
+            ids_bucket = ids_bucket[self.rank:: self.num_replicas]
 
             # batching
             for j in range(len(ids_bucket) // self.batch_size):
                 batch = [
                     bucket[idx]
                     for idx in ids_bucket[
-                        j * self.batch_size : (j + 1) * self.batch_size
+                        j * self.batch_size: (j + 1) * self.batch_size
                     ]
                 ]
                 batches.append(batch)
