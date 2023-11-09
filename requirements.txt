@@ -31,3 +31,4 @@ g2p_en
 sentencepiece
 pykakasi
 langid
+h5py
