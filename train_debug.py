@@ -42,8 +42,7 @@ global_step = 0
 # For Debug
 model_dir = 'test_data/models'
 config = 'configs/config.json'
-train_data_folders = ['test_data/process']
-eval_data_folders = ['test_data/process']
+# 调试临时用，正式训练版本将读取config，以及调整适当DataLoader的num workers等配置
 batch_size = 2
 rank = 0
 
@@ -60,7 +59,7 @@ def run():
     logger.info(hps)
     writer = SummaryWriter(log_dir=hps.model_dir)
     writer_eval = SummaryWriter(log_dir=os.path.join(hps.model_dir, "eval"))
-    train_dataset = FolderDataset(train_data_folders)
+    train_dataset = FolderDataset(hps.data.train_root)
     collate_fn = TextAudioSpeakerCollate()
     train_loader = DataLoader(
         train_dataset,
@@ -72,7 +71,7 @@ def run():
         # persistent_workers=True,
         # prefetch_factor=4,
     )  # DataLoader config could be adjusted.
-    eval_dataset = FolderDataset(eval_data_folders)
+    eval_dataset = FolderDataset(hps.data.eval_root)
     eval_loader = DataLoader(
         eval_dataset,
         num_workers=0,

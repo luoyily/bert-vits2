@@ -13,18 +13,27 @@ import h5py
 
 
 class FolderDataset(torch.utils.data.Dataset):
-    def __init__(self, folders=[]) -> None:
+    def __init__(self, data_root, realtime_spec=False) -> None:
         super().__init__()
+        self.realtime_spec = realtime_spec
         self.datas = []
-        for folder in folders:
-            self.datas += [os.path.join(folder, fn)for fn in os.listdir(folder) if fn.endswith('h5')]
-
+        for root, dirs, files in os.walk(data_root):
+            for file in files:
+                file_path = os.path.join(root, file)
+                if file_path.endswith('h5'):
+                    self.datas.append(file_path)
+    
     def __getitem__(self, index):
         h5_path = self.datas[index]
         with h5py.File(h5_path, 'r') as data:
             phones = torch.LongTensor(data['phones'][:])
-            spec = torch.FloatTensor(data['spec'][:])
             wav = torch.FloatTensor(data['wav'][:])
+            # 实验性功能：实时计算spec，节约储存空间（Loader耗时翻2倍）
+            if self.realtime_spec:
+                spec = spectrogram_torch(wav, 2048, 44100,512, 2048, center=False,).squeeze(0)
+            else:
+                spec = torch.FloatTensor(data['spec'][:])
+            
             sid = torch.LongTensor(data['sid'][:])
             tone = torch.LongTensor(data['tone'][:])
             language = torch.LongTensor(data['language'][:])

@@ -37,7 +37,9 @@
     "spk2id": {
       "リリア": 0,
       "灰桜": 1
-    }
+    },
+    "train_root": "test_data/process",
+    "eval_root": "test_data/process"
   },
   "model": {
     "use_spk_conditioned_encoder": true,
