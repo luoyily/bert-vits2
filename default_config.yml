@@ -6,57 +6,6 @@
 # 不填或者填空则路径为相对于项目根目录的路径
 dataset_path: "Data/你的数据集"
 
-# 模型镜像源，默认huggingface，使用openi镜像源需指定openi_token
-mirror: ""
-openi_token: ""  # openi token
-
-# resample 音频重采样配置
-# 注意， “:” 后需要加空格
-resample:
-  # 目标重采样率
-  sampling_rate: 44100
-  # 音频文件输入路径，重采样会将该路径下所有.wav音频文件重采样
-  # 请填入相对于datasetPath的相对路径
-  in_dir: "audios/raw" # 相对于根目录的路径为 /datasetPath/in_dir
-  # 音频文件重采样后输出路径
-  out_dir: "audios/wavs"
-
-
-# preprocess_text 数据集预处理相关配置
-# 注意， “:” 后需要加空格
-preprocess_text:
-  # 原始文本文件路径，文本格式应为{wav_path}|{speaker_name}|{language}|{text}。
-  transcription_path: "filelists/你的数据集文本.list"
-  # 数据清洗后文本路径，可以不填。不填则将在原始文本目录生成
-  cleaned_path: ""
-  # 训练集路径
-  train_path: "filelists/train.list"
-  # 验证集路径
-  val_path: "filelists/val.list"
-  # 配置文件路径
-  config_path: "config.json"
-  # 每个speaker的验证集条数
-  val_per_spk: 5
-  # 验证集最大条数，多于的会被截断并放到训练集中
-  max_val_total: 8
-  # 是否进行数据清洗
-  clean: true
-
-
-# bert_gen 相关配置
-# 注意， “:” 后需要加空格
-bert_gen:
-  # 训练数据集配置文件路径
-  config_path: "config.json"
-  # 并行数
-  num_processes: 2
-  # 使用设备：可选项 "cuda" 显卡推理，"cpu" cpu推理
-  # 该选项同时决定了get_bert_feature的默认设备
-  device: "cuda"
-  # 使用多卡推理
-  use_multi_device: false
-
-
 # train 训练配置
 # 注意， “:” 后需要加空格
 train_ms:
@@ -121,22 +70,7 @@ server:
       # 模型人物默认参数
       # 不必填写所有人物，不填的使用默认值
       # 暂时不用填写，当前尚未实现按人区分配置
-      speakers:
-        - speaker: "科比"
-          sdp_ratio: 0.2
-          noise_scale: 0.6
-          noise_scale_w: 0.8
-          length_scale: 1
-        - speaker: "五条悟"
-          sdp_ratio: 0.3
-          noise_scale: 0.7
-          noise_scale_w: 0.8
-          length_scale: 0.5
-        - speaker: "安倍晋三"
-          sdp_ratio: 0.2
-          noise_scale: 0.6
-          noise_scale_w: 0.8
-          length_scale: 1.2
+      speakers: [ ]
     - # 模型的路径
       model: ""
       # 模型config.json的路径
