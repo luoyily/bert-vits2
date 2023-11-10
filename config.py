@@ -9,106 +9,16 @@ import shutil
 import sys
 
 
-class Resample_config:
-    """重采样配置"""
-
-    def __init__(self, in_dir: str, out_dir: str, sampling_rate: int = 44100):
-        self.sampling_rate: int = sampling_rate  # 目标采样率
-        self.in_dir: str = in_dir  # 待处理音频目录路径
-        self.out_dir: str = out_dir  # 重采样输出路径
-
-    @classmethod
-    def from_dict(cls, dataset_path: str, data: Dict[str, any]):
-        """从字典中生成实例"""
-
-        # 不检查路径是否有效，此逻辑在resample.py中处理
-        data["in_dir"] = os.path.join(dataset_path, data["in_dir"])
-        data["out_dir"] = os.path.join(dataset_path, data["out_dir"])
-
-        return cls(**data)
-
-
-class Preprocess_text_config:
-    """数据预处理配置"""
-
+class Data_pack_config:
     def __init__(
         self,
-        transcription_path: str,
-        cleaned_path: str,
-        train_path: str,
-        val_path: str,
-        config_path: str,
-        val_per_spk: int = 5,
-        max_val_total: int = 10000,
-        clean: bool = True,
+        filelist_path: str = "file.list",
+        config_path: str = "config.json",
+        audio_path: str = "audios",
+        data_path: str = "datas",  # data_pack输出
+        num_process: int = 1,
     ):
-        self.transcription_path: str = transcription_path  # 原始文本文件路径，文本格式应为{wav_path}|{speaker_name}|{language}|{text}。
-        self.cleaned_path: str = cleaned_path  # 数据清洗后文本路径，可以不填。不填则将在原始文本目录生成
-        self.train_path: str = train_path  # 训练集路径，可以不填。不填则将在原始文本目录生成
-        self.val_path: str = val_path  # 验证集路径，可以不填。不填则将在原始文本目录生成
-        self.config_path: str = config_path  # 配置文件路径
-        self.val_per_spk: int = val_per_spk  # 每个speaker的验证集条数
-        self.max_val_total: int = max_val_total  # 验证集最大条数，多于的会被截断并放到训练集中
-        self.clean: bool = clean  # 是否进行数据清洗
-
-    @classmethod
-    def from_dict(cls, dataset_path: str, data: Dict[str, any]):
-        """从字典中生成实例"""
-
-        data["transcription_path"] = os.path.join(
-            dataset_path, data["transcription_path"]
-        )
-        if data["cleaned_path"] == "" or data["cleaned_path"] is None:
-            data["cleaned_path"] = None
-        else:
-            data["cleaned_path"] = os.path.join(dataset_path, data["cleaned_path"])
-        data["train_path"] = os.path.join(dataset_path, data["train_path"])
-        data["val_path"] = os.path.join(dataset_path, data["val_path"])
-        data["config_path"] = os.path.join(dataset_path, data["config_path"])
-
-        return cls(**data)
-
-
-class Bert_gen_config:
-    """bert_gen 配置"""
-
-    def __init__(
-        self,
-        config_path: str,
-        num_processes: int = 2,
-        device: str = "cuda",
-        use_multi_device: bool = False,
-    ):
-        self.config_path = config_path
-        self.num_processes = num_processes
-        self.device = device
-        self.use_multi_device = use_multi_device
-
-    @classmethod
-    def from_dict(cls, dataset_path: str, data: Dict[str, any]):
-        data["config_path"] = os.path.join(dataset_path, data["config_path"])
-
-        return cls(**data)
-
-
-class Emo_gen_config:
-    """emo_gen 配置"""
-
-    def __init__(
-        self,
-        config_path: str,
-        num_processes: int = 2,
-        device: str = "cuda",
-    ):
-        self.config_path = config_path
-        self.num_processes = num_processes
-        self.device = device
-
-    @classmethod
-    def from_dict(cls, dataset_path: str, data: Dict[str, any]):
-        data["config_path"] = os.path.join(dataset_path, data["config_path"])
-
-        return cls(**data)
+        pass
 
 
 class Train_ms_config:
@@ -201,21 +111,7 @@ class Config:
         with open(file=config_path, mode="r", encoding="utf-8") as file:
             yaml_config: Dict[str, any] = yaml.safe_load(file.read())
             dataset_path: str = yaml_config["dataset_path"]
-            openi_token: str = yaml_config["openi_token"]
             self.dataset_path: str = dataset_path
-            self.mirror: str = yaml_config["mirror"]
-            self.openi_token: str = openi_token
-            self.resample_config: Resample_config = Resample_config.from_dict(
-                dataset_path, yaml_config["resample"]
-            )
-            self.preprocess_text_config: Preprocess_text_config = (
-                Preprocess_text_config.from_dict(
-                    dataset_path, yaml_config["preprocess_text"]
-                )
-            )
-            self.bert_gen_config: Bert_gen_config = Bert_gen_config.from_dict(
-                dataset_path, yaml_config["bert_gen"]
-            )
             self.train_ms_config: Train_ms_config = Train_ms_config.from_dict(
                 dataset_path, yaml_config["train_ms"]
             )
