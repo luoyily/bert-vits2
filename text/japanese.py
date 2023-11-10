@@ -2,6 +2,7 @@
 # compatible with Julius https://github.com/julius-speech/segmentation-kit
 import re
 import unicodedata
+from typing import List
 
 from transformers import AutoTokenizer
 
@@ -13,7 +14,7 @@ import pyopenjtalk
 import jaconv
 
 
-def kata2phoneme(text: str) -> str:
+def kata2phoneme(text: str) -> List[str]:
     """Convert katakana text to phonemes."""
     text = text.strip()
     if text == "ー":
@@ -63,7 +64,7 @@ def text2kata(text: str) -> str:
                     word = [replace_punctuation(i) for i in list(word)]
                     yomi = word
                     res += yomi
-                    sep += word
+                    # sep += word
                     continue
                 elif word not in rep_map.keys() and word not in rep_map.values():
                     word = ","
@@ -225,7 +226,7 @@ def japanese_convert_alpha_symbols_to_words(text: str) -> str:
     return "".join([_ALPHASYMBOL_YOMI.get(ch, ch) for ch in text.lower()])
 
 
-def japanese_text_to_phonemes(text: str) -> str:
+def japanese_text_to_phonemes(text: str) -> List[str]:
     """Convert Japanese text to phonemes."""
     res = unicodedata.normalize("NFKC", text)
     res = japanese_convert_numbers_to_words(res)
@@ -390,6 +391,7 @@ def g2p(norm_text):
 
 
 if __name__ == "__main__":
+    """
     tokenizer = AutoTokenizer.from_pretrained("./bert/deberta-v2-large-japanese")
     text = "hello,こんにちは、世界ー！……"
     from text.japanese_bert import get_bert_feature
@@ -401,3 +403,5 @@ if __name__ == "__main__":
     bert = get_bert_feature(text, word2ph)
 
     print(phones, tones, word2ph, bert.shape)
+    """
+    pass
