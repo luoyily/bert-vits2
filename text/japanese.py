@@ -81,7 +81,7 @@ def text2kata(text: str) -> str:
     return hira2kata("".join(res))
 
 
-def text2sep_kata(text: str) -> (list, list):
+def text2sep_kata(text: str):
     parsed = pyopenjtalk.run_frontend(text)
 
     res = []
