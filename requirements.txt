@@ -32,3 +32,4 @@ sentencepiece
 pykakasi
 langid
 h5py
+soxr
