@@ -12,7 +12,7 @@ tokenizer = AutoTokenizer.from_pretrained(LOCAL_PATH)
 models = dict()
 
 
-def get_bert_feature(text, word2ph, device=config.bert_gen_config.device):
+def get_bert_feature(text, word2ph, device="cuda"):
     if (
         sys.platform == "darwin"
         and torch.backends.mps.is_available()

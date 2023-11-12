@@ -13,7 +13,7 @@ tokenizer = AutoTokenizer.from_pretrained(LOCAL_PATH)
 models = dict()
 
 
-def get_bert_feature(text, word2ph, device=config.bert_gen_config.device):
+def get_bert_feature(text, word2ph, device="cuda"):
     sep_text, _, _ = text2sep_kata(text)
     sep_tokens = [tokenizer.tokenize(t) for t in sep_text]
     sep_ids = [tokenizer.convert_tokens_to_ids(t) for t in sep_tokens]
@@ -21,7 +21,7 @@ def get_bert_feature(text, word2ph, device=config.bert_gen_config.device):
     return get_bert_feature_with_token(sep_ids, word2ph, device)
 
 
-def get_bert_feature_with_token(tokens, word2ph, device=config.bert_gen_config.device):
+def get_bert_feature_with_token(tokens, word2ph, device="cuda"):
     if (
         sys.platform == "darwin"
         and torch.backends.mps.is_available()
