@@ -66,9 +66,7 @@ def filter_data_and_build_config(file_list_path: str, audio_root: str):
         voice = line.split("|")[0]
         speaker = line.split("|")[1]
         # 筛选可用数据同时构建角色-id字典
-        if os.path.exists(os.path.join(audio_root, voice)) and (
-            voice not in added_audio
-        ):
+        if os.path.exists(os.path.join(audio_root, voice)) and (voice not in added_audio):
             filtered_list.append(line)
             added_audio.append(voice)
             if speaker not in speaker_id_map.keys():
@@ -88,26 +86,15 @@ def filter_data_and_build_config(file_list_path: str, audio_root: str):
 def pack_item(line, speaker_id_map, audio_root, output_root):
     audio_path, speaker, language, text = tuple(line.split("|"))
     # 加载音频并处理为张量，计算频谱
-    audio_res, sr = librosa.load(
-        os.path.join(audio_root, audio_path), sr=44100, res_type="soxr_vhq"
-    )
+    audio_res, sr = librosa.load(os.path.join(audio_root, audio_path), sr=44100, res_type="soxr_vhq")
     # audio,spec Tensor
     # clamp 处理音频超过范围的值（暂不确定是否有影响）
     audio_norm = torch.FloatTensor(audio_res).unsqueeze(0).clamp(-1, 1)
-    spec = spectrogram_torch(
-        audio_norm,
-        2048,
-        44100,
-        512,
-        2048,
-        center=False,
-    ).squeeze(0)
+    spec = spectrogram_torch(audio_norm,2048,44100,512,2048,center=False,).squeeze(0)
 
     # 预处理文本，获取文本bert结果
     norm_text, phones, tones, word2ph = clean_text(text, language)
-    phone_ids, tone_ids, language_ids = cleaned_text_to_sequence(
-        phones, tones, language
-    )
+    phone_ids, tone_ids, language_ids = cleaned_text_to_sequence(phones, tones, language)
     language_id = torch.LongTensor([language_ids[0]])
     if add_blank:
         phone_ids = commons.intersperse(phone_ids, 0)
@@ -126,12 +113,7 @@ def pack_item(line, speaker_id_map, audio_root, output_root):
     # sid Tensor
     sid = torch.LongTensor([int(speaker_id_map[speaker])])
 
-    if (
-        int(phone.shape[0])
-        == int(tone.shape[0])
-        == int(language_tensor.shape[0])
-        == int(bert.shape[1])
-    ):
+    if (int(phone.shape[0]) == int(tone.shape[0]) == int(language_tensor.shape[0]) == int(bert.shape[1])):
         h5_path = os.path.join(output_root, audio_path + ".h5")
         h5_folder = os.path.split(h5_path)[0]
         if not os.path.exists(h5_folder):
@@ -150,24 +132,12 @@ def pack_item(line, speaker_id_map, audio_root, output_root):
 if __name__ == "__main__":
     tokenizer = AutoTokenizer.from_pretrained("./bert/deberta-v2-large-japanese")
     # 多进程处理训练集
-    filtered_list, speaker_id_map = filter_data_and_build_config(
-        train_file_list, train_audio_root
-    )
-    partial_pack_item = partial(
-        pack_item,
-        speaker_id_map=speaker_id_map,
-        audio_root=train_audio_root,
-        output_root=train_output_root,
-    )
+    filtered_list, speaker_id_map = filter_data_and_build_config(train_file_list, train_audio_root)
+    partial_pack_item = partial(pack_item,speaker_id_map=speaker_id_map,audio_root=train_audio_root,output_root=train_output_root,)
     with Pool(processes=num_processes) as pool:
-        for _ in tqdm(
-            pool.imap_unordered(partial_pack_item, filtered_list),
-            total=len(filtered_list),
-        ):
+        for _ in tqdm(pool.imap_unordered(partial_pack_item, filtered_list),total=len(filtered_list),):
             pass
     # 处理验证集 注：speaker_id_map需使用训练集的，即与配置文件一致
-    eval_filtered_list, _ = filter_data_and_build_config(
-        eval_file_list, eval_audio_root
-    )
+    eval_filtered_list, _ = filter_data_and_build_config(eval_file_list, eval_audio_root)
     for line in eval_filtered_list:
         pack_item(line, speaker_id_map, eval_audio_root, eval_output_root)

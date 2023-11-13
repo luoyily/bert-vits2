@@ -42,32 +42,29 @@ class Data_pack_config:
         data["train_datas"] = os.path.join(dataset_path, data["train_datas"])
         data["eval_filelist"] = os.path.join(dataset_path, data["eval_filelist"])
         data["eval_audios"] = os.path.join(dataset_path, data["eval_audios"])
-
+        data["eval_datas"] = os.path.join(dataset_path, data["eval_datas"])
         data["config_out"] = os.path.join(dataset_path, data["config_out"])
 
         return cls(**data)
 
+class Train_config:
+    def __init__(self, model_dir:str) -> None:
+        self.model_dir = model_dir
+
+    @classmethod
+    def from_dict(cls, dataset_path: str, data: Dict[str, any]):
+        data["model_dir"] = os.path.join(dataset_path, data["model_dir"])
+
+        return cls(**data)
 
 class Train_ms_config:
     """训练配置"""
 
-    def __init__(
-        self,
-        config_path: str,
-        env: Dict[str, any],
-        base: Dict[str, any],
-        model: str,
-    ):
+    def __init__(self,env: Dict[str, any],):
         self.env = env  # 需要加载的环境变量
-        self.base = base  # 底模配置
-        self.model = model  # 训练模型存储目录，该路径为相对于dataset_path的路径，而非项目根目录
-        self.config_path = config_path  # 配置文件路径
 
     @classmethod
-    def from_dict(cls, dataset_path: str, data: Dict[str, any]):
-        # data["model"] = os.path.join(dataset_path, data["model"])
-        data["config_path"] = os.path.join(dataset_path, data["config_path"])
-
+    def from_dict(cls, data: Dict[str, any]):
         return cls(**data)
 
 
@@ -143,7 +140,7 @@ class Config:
                 dataset_path, yaml_config["data_pack"]
             )
             self.train_ms_config: Train_ms_config = Train_ms_config.from_dict(
-                dataset_path, yaml_config["train_ms"]
+                yaml_config["train_ms"]
             )
             self.webui_config: Webui_config = Webui_config.from_dict(
                 dataset_path, yaml_config["webui"]
@@ -153,6 +150,9 @@ class Config:
             )
             self.translate_config: Translate_config = Translate_config.from_dict(
                 yaml_config["translate"]
+            )
+            self.train_config: Train_config = Train_config.from_dict(
+                dataset_path, yaml_config["train"]
             )
 
 

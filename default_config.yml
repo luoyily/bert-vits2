@@ -23,14 +23,19 @@ data_pack:
   eval_datas: "datas/eval"
   # 处理并发数，根据电脑配置自己加，预处理吃显存
   num_process: 2
-  # 暂时不知道是干嘛的
+  # 是否在文本处理后的各种序列中添加空格（例如音素，音调等）（此处用于预处理，采用config.json中原始值）
   add_blank: true
   # config.json的模版文件，注意这个路径是相对于项目根的，其他都是相对于上面的dataset_path的
   config_in: "configs/config.json"
   # config.json预处理输出
   config_out: "config.json"
 
-# train 训练配置
+# Train 配置
+train:
+  # 相对于dataset_path下
+  model_dir: models
+
+# 多卡train 训练配置（暂时未适配多卡）
 # 注意， “:” 后需要加空格
 train_ms:
   # 需要加载的环境变量，多显卡训练时RANK请手动在环境变量填写
@@ -42,16 +47,6 @@ train_ms:
     RANK: 0
     # 可以填写任意名的环境变量
     THE_ENV_VAR_YOU_NEED_TO_USE: "1234567"
-  # 底模设置
-  base:
-    use_base_model: false
-    repo_id: "Stardust_minus/Bert-VITS2"
-    model_image: "Bert-VITS2中日底模" # openi网页的模型名
-  # 训练模型存储目录：与旧版本的区别，原先数据集是存放在logs/model_name下的，现在改为统一存放在Data/你的数据集/models下
-  model: "models"
-  # 配置文件路径
-  config_path: "config.json"
-
 
 # webui webui配置
 # 注意， “:” 后需要加空格

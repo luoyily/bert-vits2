@@ -11,19 +11,15 @@ from models import (
 )
 import utils
 import commons
-# import platform
 import os
 import torch
 from torch.nn import functional as F
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
-# import torch.distributed as dist
-# from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.cuda.amp import autocast, GradScaler
 from tqdm import tqdm
 import logging
 from config import config
-# import argparse
 
 logging.getLogger("numba").setLevel(logging.WARNING)
 
@@ -39,11 +35,11 @@ torch.backends.cuda.enable_flash_sdp(True)
 torch.backends.cuda.enable_math_sdp(True)
 global_step = 0
 
-# For Debug
-model_dir = 'test_data/models'
-config = 'configs/config.json'
-# 调试临时用，正式训练版本将读取config，以及调整适当DataLoader的num workers等配置
-batch_size = 2
+model_dir = config.train_config.model_dir
+config = config.data_pack_config.config_out
+
+# 下方66行处 DataLoader的num workers等配置可按需自行调整
+
 rank = 0
 
 def run():
@@ -63,14 +59,14 @@ def run():
     collate_fn = TextAudioSpeakerCollate()
     train_loader = DataLoader(
         train_dataset,
-        batch_size=batch_size,
+        batch_size=hps.train.batch_size,
         num_workers=0,
         shuffle=False,
         pin_memory=True,
         collate_fn=collate_fn,
         # persistent_workers=True,
         # prefetch_factor=4,
-    )  # DataLoader config could be adjusted.
+    )
     eval_dataset = FolderDataset(hps.data.eval_root)
     eval_loader = DataLoader(
         eval_dataset,
