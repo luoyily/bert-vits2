@@ -6,6 +6,8 @@ BertVits2 个人测试用副本（Fork于11.7日版本）（即修复日语Bert 
 
 ## 训练
 
+0. 配置环境，下载所需的Bert模型（见`bert/bert_models.json`），底模（见原仓库release）等。
+
 1. 配置并运行`data_pack.py`预处理数据（数据格式与要求见其中注释）
 2. 配置`train_debug.py`运行即可（此文件仅支持单卡）
 
