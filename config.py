@@ -12,13 +12,40 @@ import sys
 class Data_pack_config:
     def __init__(
         self,
-        filelist_path: str = "file.list",
-        config_path: str = "config.json",
-        audio_path: str = "audios",
-        data_path: str = "datas",  # data_pack输出
-        num_process: int = 1,
+        train_filelist: str,
+        train_audios: str,
+        train_datas: str,
+        eval_filelist: str,
+        eval_audios: str,
+        eval_datas: str,  # data_pack输出
+        num_process: int,
+        add_blank: bool,
+        config_in: str,
+        config_out: str,
     ):
-        pass
+        self.train_filelist: str = train_filelist  # 训练集文件
+        self.train_audios: str = train_audios  # 训练集音频目录
+        self.train_datas: str = train_datas  # 训练集预处理输出目录
+        self.eval_filelist: str = eval_filelist  # 验证集文件
+        self.eval_audios: str = eval_audios  # 验证集音频目录
+        self.eval_datas: str = eval_datas  # 验证集预处理输出目录
+        self.num_process: int = num_process  # 处理并发数
+        self.add_blank: bool = add_blank  # TODO
+        self.config_in: str = config_in  # config.json 模板目录 唯独这个路径是相对于项目根的，请注意。
+        self.config_out: str = config_out  # config.json 输出目录
+
+    @classmethod
+    def from_dict(cls, dataset_path: str, data: Dict[str, any]):
+        # 反序列化
+        data["train_filelist"] = os.path.join(dataset_path, data["train_filelist"])
+        data["train_audios"] = os.path.join(dataset_path, data["train_audios"])
+        data["train_datas"] = os.path.join(dataset_path, data["train_datas"])
+        data["eval_filelist"] = os.path.join(dataset_path, data["eval_filelist"])
+        data["eval_audios"] = os.path.join(dataset_path, data["eval_audios"])
+
+        data["config_out"] = os.path.join(dataset_path, data["config_out"])
+
+        return cls(**data)
 
 
 class Train_ms_config:
@@ -112,6 +139,9 @@ class Config:
             yaml_config: Dict[str, any] = yaml.safe_load(file.read())
             dataset_path: str = yaml_config["dataset_path"]
             self.dataset_path: str = dataset_path
+            self.data_pack_config: Data_pack_config = Data_pack_config.from_dict(
+                dataset_path, yaml_config["data_pack"]
+            )
             self.train_ms_config: Train_ms_config = Train_ms_config.from_dict(
                 dataset_path, yaml_config["train_ms"]
             )

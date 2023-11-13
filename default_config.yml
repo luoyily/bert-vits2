@@ -4,7 +4,31 @@
 # 拟提供通用路径配置，统一存放数据，避免数据放得很乱
 # 每个数据集与其对应的模型存放至统一路径下，后续所有的路径配置均为相对于datasetPath的路径
 # 不填或者填空则路径为相对于项目根目录的路径
-dataset_path: "Data/你的数据集"
+dataset_path: "Data/你的数据集文件夹"
+
+
+# 预处理配置
+data_pack:
+  # 训练集文件 【没有必要就不要改默认值】
+  train_filelist: "filelist/train.txt"
+  # 训练集音频目录 【没有必要就不要改默认值】
+  train_audios: "audios"
+  # 预处理训练集数据输出目录 【没有必要就不要改默认值】
+  train_datas: "datas/train"
+  # 验证集文件 【没有必要就不要改默认值】
+  eval_filelist: "filelist/eval.txt"
+  # 验证集音频目录 【没有必要就不要改默认值】
+  eval_audios: "audios"
+  # 预处理验证集数据输出目录 【没有必要就不要改默认值】
+  eval_datas: "datas/eval"
+  # 处理并发数，根据电脑配置自己加，预处理吃显存
+  num_process: 2
+  # 暂时不知道是干嘛的
+  add_blank: true
+  # config.json的模版文件，注意这个路径是相对于项目根的，其他都是相对于上面的dataset_path的
+  config_in: "configs/config.json"
+  # config.json预处理输出
+  config_out: "config.json"
 
 # train 训练配置
 # 注意， “:” 后需要加空格
