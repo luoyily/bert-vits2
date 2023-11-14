@@ -30,7 +30,7 @@ class Data_pack_config:
         self.eval_audios: str = eval_audios  # 验证集音频目录
         self.eval_datas: str = eval_datas  # 验证集预处理输出目录
         self.num_process: int = num_process  # 处理并发数
-        self.add_blank: bool = add_blank  # TODO
+        self.add_blank: bool = add_blank  # 是否在文本处理后的各种序列中添加空格（例如音素，音调等）（此处用于预处理，采用config.json中原始值）
         self.config_in: str = config_in  # config.json 模板目录 唯独这个路径是相对于项目根的，请注意。
         self.config_out: str = config_out  # config.json 输出目录
 
