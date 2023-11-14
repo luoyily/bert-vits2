@@ -67,10 +67,10 @@ webui:
   language_identification_library: "langid"
 
 
-# server api配置
+# hiyori_UI 配置
 # 注意， “:” 后需要加空格
 # 注意，本配置下的所有配置均为相对于根目录的路径
-server:
+hiyori_UI:
   # 端口号
   port: 5000
   # 模型默认使用设备：但是当前并没有实现这个配置。

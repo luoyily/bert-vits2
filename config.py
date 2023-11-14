@@ -47,8 +47,9 @@ class Data_pack_config:
 
         return cls(**data)
 
+
 class Train_config:
-    def __init__(self, model_dir:str) -> None:
+    def __init__(self, model_dir: str) -> None:
         self.model_dir = model_dir
 
     @classmethod
@@ -57,10 +58,14 @@ class Train_config:
 
         return cls(**data)
 
+
 class Train_ms_config:
     """训练配置"""
 
-    def __init__(self,env: Dict[str, any],):
+    def __init__(
+        self,
+        env: Dict[str, any],
+    ):
         self.env = env  # 需要加载的环境变量
 
     @classmethod
@@ -98,7 +103,7 @@ class Webui_config:
         return cls(**data)
 
 
-class Server_config:
+class Hiyori_UI_config:
     def __init__(
         self, models: List[Dict[str, any]], port: int = 5000, device: str = "cuda"
     ):
@@ -145,8 +150,8 @@ class Config:
             self.webui_config: Webui_config = Webui_config.from_dict(
                 dataset_path, yaml_config["webui"]
             )
-            self.server_config: Server_config = Server_config.from_dict(
-                yaml_config["server"]
+            self.hiyori_UI_config: Hiyori_UI_config = Hiyori_UI_config.from_dict(
+                yaml_config["hiyori_UI"]
             )
             self.translate_config: Translate_config = Translate_config.from_dict(
                 yaml_config["translate"]

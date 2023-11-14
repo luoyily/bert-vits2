@@ -1,10 +1,10 @@
 """
-api服务 多版本多模型 fastapi实现
+hiyori UI后端服务
 """
 import logging
 import gc
 import random
-
+import sys
 from pydantic import BaseModel
 import gradio
 import numpy as np
@@ -27,7 +27,6 @@ from urllib.parse import unquote
 from infer import infer, get_net_g, latest_version
 import tools.translate as trans
 from re_matching import cut_sent
-
 
 from config import config
 
@@ -78,7 +77,7 @@ class Models:
         self.path2ids: Dict[str, Set[int]] = dict()  # 路径指向的model的id
 
     def init_model(
-        self, config_path: str, model_path: str, device: str, language: str
+            self, config_path: str, model_path: str, device: str, language: str
     ) -> int:
         """
         初始化并添加一个模型
@@ -149,6 +148,9 @@ if __name__ == "__main__":
     app = FastAPI()
     app.logger = logger
     # 挂载静态文件
+    if not os.path.isdir("./Web"):
+        logger.error("请在 https://github.com/jiangyuxiaoxiao/Bert-VITS2-UI 下载对应版本release")
+        sys.exit(0)
     StaticDir: str = "./Web"
     dirs = [fir.name for fir in os.scandir(StaticDir) if fir.is_dir()]
     files = [fir.name for fir in os.scandir(StaticDir) if fir.is_dir()]
@@ -160,7 +162,7 @@ if __name__ == "__main__":
         )
     loaded_models = Models()
     # 加载模型
-    models_info = config.server_config.models
+    models_info = config.hiyori_UI_config.models
     for model_info in models_info:
         loaded_models.init_model(
             config_path=model_info["config"],
@@ -169,34 +171,37 @@ if __name__ == "__main__":
             language=model_info["language"],
         )
 
+
     @app.get("/")
     async def index():
         return FileResponse("./Web/index.html")
 
+
     class Text(BaseModel):
         text: str
 
+
     @app.post("/voice")
     def voice(
-        request: Request,  # fastapi自动注入
-        text: Text,
-        model_id: int = Query(..., description="模型ID"),  # 模型序号
-        speaker_name: str = Query(
-            None, description="说话人名"
-        ),  # speaker_name与 speaker_id二者选其一
-        speaker_id: int = Query(None, description="说话人id，与speaker_name二选一"),
-        sdp_ratio: float = Query(0.2, description="SDP/DP混合比"),
-        noise: float = Query(0.2, description="感情"),
-        noisew: float = Query(0.9, description="音素长度"),
-        length: float = Query(1, description="语速"),
-        language: str = Query(None, description="语言"),  # 若不指定使用语言则使用默认值
-        auto_translate: bool = Query(False, description="自动翻译"),
-        auto_split: bool = Query(False, description="自动切分"),
+            request: Request,  # fastapi自动注入
+            text: Text,
+            model_id: int = Query(..., description="模型ID"),  # 模型序号
+            speaker_name: str = Query(
+                None, description="说话人名"
+            ),  # speaker_name与 speaker_id二者选其一
+            speaker_id: int = Query(None, description="说话人id，与speaker_name二选一"),
+            sdp_ratio: float = Query(0.2, description="SDP/DP混合比"),
+            noise: float = Query(0.2, description="感情"),
+            noisew: float = Query(0.9, description="音素长度"),
+            length: float = Query(1, description="语速"),
+            language: str = Query(None, description="语言"),  # 若不指定使用语言则使用默认值
+            auto_translate: bool = Query(False, description="自动翻译"),
+            auto_split: bool = Query(False, description="自动切分"),
     ):
         """语音接口"""
         text = text.text
         logger.info(
-            f"{request.client.host}:{request.client.port}/voice  { unquote(str(request.query_params) )} text={text}"
+            f"{request.client.host}:{request.client.port}/voice  {unquote(str(request.query_params))} text={text}"
         )
         # 检查模型是否存在
         if model_id not in loaded_models.models.keys():
@@ -259,26 +264,27 @@ if __name__ == "__main__":
         response = Response(content=wavContent.getvalue(), media_type="audio/wav")
         return response
 
+
     @app.get("/voice")
     def voice(
-        request: Request,  # fastapi自动注入
-        text: str = Query(..., description="输入文字"),
-        model_id: int = Query(..., description="模型ID"),  # 模型序号
-        speaker_name: str = Query(
-            None, description="说话人名"
-        ),  # speaker_name与 speaker_id二者选其一
-        speaker_id: int = Query(None, description="说话人id，与speaker_name二选一"),
-        sdp_ratio: float = Query(0.2, description="SDP/DP混合比"),
-        noise: float = Query(0.2, description="感情"),
-        noisew: float = Query(0.9, description="音素长度"),
-        length: float = Query(1, description="语速"),
-        language: str = Query(None, description="语言"),  # 若不指定使用语言则使用默认值
-        auto_translate: bool = Query(False, description="自动翻译"),
-        auto_split: bool = Query(False, description="自动切分"),
+            request: Request,  # fastapi自动注入
+            text: str = Query(..., description="输入文字"),
+            model_id: int = Query(..., description="模型ID"),  # 模型序号
+            speaker_name: str = Query(
+                None, description="说话人名"
+            ),  # speaker_name与 speaker_id二者选其一
+            speaker_id: int = Query(None, description="说话人id，与speaker_name二选一"),
+            sdp_ratio: float = Query(0.2, description="SDP/DP混合比"),
+            noise: float = Query(0.2, description="感情"),
+            noisew: float = Query(0.9, description="音素长度"),
+            length: float = Query(1, description="语速"),
+            language: str = Query(None, description="语言"),  # 若不指定使用语言则使用默认值
+            auto_translate: bool = Query(False, description="自动翻译"),
+            auto_split: bool = Query(False, description="自动切分"),
     ):
         """语音接口"""
         logger.info(
-            f"{request.client.host}:{request.client.port}/voice  { unquote(str(request.query_params) )}"
+            f"{request.client.host}:{request.client.port}/voice  {unquote(str(request.query_params))}"
         )
         # 检查模型是否存在
         if model_id not in loaded_models.models.keys():
@@ -340,6 +346,7 @@ if __name__ == "__main__":
         )
         response = Response(content=wavContent.getvalue(), media_type="audio/wav")
         return response
+
 
     @app.get("/models/info")
     def get_loaded_models_info(request: Request):
@@ -350,32 +357,34 @@ if __name__ == "__main__":
             result[str(key)] = model.to_dict()
         return result
 
+
     @app.get("/models/delete")
     def delete_model(
-        request: Request, model_id: int = Query(..., description="删除模型id")
+            request: Request, model_id: int = Query(..., description="删除模型id")
     ):
         """删除指定模型"""
         logger.info(
-            f"{request.client.host}:{request.client.port}/models/delete  { unquote(str(request.query_params) )}"
+            f"{request.client.host}:{request.client.port}/models/delete  {unquote(str(request.query_params))}"
         )
         result = loaded_models.del_model(model_id)
         if result is None:
             return {"status": 14, "detail": f"模型{model_id}不存在，删除失败"}
         return {"status": 0, "detail": "删除成功"}
 
+
     @app.get("/models/add")
     def add_model(
-        request: Request,
-        model_path: str = Query(..., description="添加模型路径"),
-        config_path: str = Query(
-            None, description="添加模型配置文件路径，不填则使用./config.json或../config.json"
-        ),
-        device: str = Query("cuda", description="推理使用设备"),
-        language: str = Query("ZH", description="模型默认语言"),
+            request: Request,
+            model_path: str = Query(..., description="添加模型路径"),
+            config_path: str = Query(
+                None, description="添加模型配置文件路径，不填则使用./config.json或../config.json"
+            ),
+            device: str = Query("cuda", description="推理使用设备"),
+            language: str = Query("ZH", description="模型默认语言"),
     ):
         """添加指定模型：允许重复添加相同路径模型，且不重复占用内存"""
         logger.info(
-            f"{request.client.host}:{request.client.port}/models/add  { unquote(str(request.query_params) )}"
+            f"{request.client.host}:{request.client.port}/models/add  {unquote(str(request.query_params))}"
         )
         if config_path is None:
             model_dir = os.path.dirname(model_path)
@@ -410,6 +419,7 @@ if __name__ == "__main__":
             },
         }
 
+
     def _get_all_models(root_dir: str = "Data", only_unloaded: bool = False):
         """从root_dir搜索获取所有可用模型"""
         result: Dict[str, List[str]] = dict()
@@ -433,7 +443,7 @@ if __name__ == "__main__":
                     model_files,
                     key=lambda pth: int(pth.lstrip("G_").rstrip(".pth"))
                     if pth.lstrip("G_").rstrip(".pth").isdigit()
-                    else 10**10,
+                    else 10 ** 10,
                 )
                 result[file] = model_files
                 models_dir = os.path.join(sub_dir, "models")
@@ -452,7 +462,7 @@ if __name__ == "__main__":
                         model_files,
                         key=lambda pth: int(pth.lstrip("models/G_").rstrip(".pth"))
                         if pth.lstrip("models/G_").rstrip(".pth").isdigit()
-                        else 10**10,
+                        else 10 ** 10,
                     )
                     result[file] += model_files
                 if len(result[file]) == 0:
@@ -460,25 +470,28 @@ if __name__ == "__main__":
 
         return result
 
+
     @app.get("/models/get_unloaded")
     def get_unloaded_models_info(
-        request: Request, root_dir: str = Query("Data", description="搜索根目录")
+            request: Request, root_dir: str = Query("Data", description="搜索根目录")
     ):
         """获取未加载模型"""
         logger.info(
-            f"{request.client.host}:{request.client.port}/models/get_unloaded  { unquote(str(request.query_params) )}"
+            f"{request.client.host}:{request.client.port}/models/get_unloaded  {unquote(str(request.query_params))}"
         )
         return _get_all_models(root_dir, only_unloaded=True)
 
+
     @app.get("/models/get_local")
     def get_local_models_info(
-        request: Request, root_dir: str = Query("Data", description="搜索根目录")
+            request: Request, root_dir: str = Query("Data", description="搜索根目录")
     ):
         """获取全部本地模型"""
         logger.info(
-            f"{request.client.host}:{request.client.port}/models/get_local  { unquote(str(request.query_params) )}"
+            f"{request.client.host}:{request.client.port}/models/get_local  {unquote(str(request.query_params))}"
         )
         return _get_all_models(root_dir, only_unloaded=False)
+
 
     @app.get("/status")
     def get_status():
@@ -516,31 +529,34 @@ if __name__ == "__main__":
             "gpu": gpuInfo,
         }
 
+
     @app.get("/tools/translate")
     def translate(
-        request: Request,
-        texts: str = Query(..., description="待翻译文本"),
-        to_language: str = Query(..., description="翻译目标语言"),
+            request: Request,
+            texts: str = Query(..., description="待翻译文本"),
+            to_language: str = Query(..., description="翻译目标语言"),
     ):
         """翻译"""
         logger.info(
-            f"{request.client.host}:{request.client.port}/tools/translate  { unquote(str(request.query_params) )}"
+            f"{request.client.host}:{request.client.port}/tools/translate  {unquote(str(request.query_params))}"
         )
         return {"texts": trans.translate(Sentence=texts, to_Language=to_language)}
 
+
     all_examples: Dict[str, Dict[str, List]] = dict()  # 存放示例
+
 
     @app.get("/tools/random_example")
     def random_example(
-        request: Request,
-        language: str = Query(None, description="指定语言，未指定则随机返回"),
-        root_dir: str = Query("Data", description="搜索根目录"),
+            request: Request,
+            language: str = Query(None, description="指定语言，未指定则随机返回"),
+            root_dir: str = Query("Data", description="搜索根目录"),
     ):
         """
         获取一个随机音频+文本，用于对比，音频会从本地目录随机选择。
         """
         logger.info(
-            f"{request.client.host}:{request.client.port}/tools/random_example  { unquote(str(request.query_params) )}"
+            f"{request.client.host}:{request.client.port}/tools/random_example  {unquote(str(request.query_params))}"
         )
         global all_examples
         # 数据初始化
@@ -554,7 +570,7 @@ if __name__ == "__main__":
                 for file in _files:
                     if file in ["train.list", "val.list"]:
                         with open(
-                            os.path.join(root, file), mode="r", encoding="utf-8"
+                                os.path.join(root, file), mode="r", encoding="utf-8"
                         ) as f:
                             lines = f.readlines()
                             for line in lines:
@@ -599,7 +615,7 @@ if __name__ == "__main__":
                     "status": 0,
                     "Data": examples["EN"][
                         rand_num - len(examples["ZH"]) - len(examples["JP"])
-                    ],
+                        ],
                 }
 
         else:
@@ -612,10 +628,11 @@ if __name__ == "__main__":
                 ],
             }
 
+
     @app.get("/tools/get_audio")
     def get_audio(request: Request, path: str = Query(..., description="本地音频路径")):
         logger.info(
-            f"{request.client.host}:{request.client.port}/tools/get_audio  { unquote(str(request.query_params) )}"
+            f"{request.client.host}:{request.client.port}/tools/get_audio  {unquote(str(request.query_params))}"
         )
         if not os.path.isfile(path):
             return {"status": 18, "detail": "指定音频不存在"}
@@ -623,9 +640,10 @@ if __name__ == "__main__":
             return {"status": 19, "detail": "非wav格式文件"}
         return FileResponse(path=path)
 
+
     logger.warning("本地服务，请勿将服务端口暴露于外网")
-    logger.info(f"api文档地址 http://127.0.0.1:{config.server_config.port}/docs")
-    webbrowser.open(f"http://127.0.0.1:{config.server_config.port}")
+    logger.info(f"api文档地址 http://127.0.0.1:{config.hiyori_UI_config.port}/docs")
+    webbrowser.open(f"http://127.0.0.1:{config.hiyori_UI_config.port}")
     uvicorn.run(
-        app, port=config.server_config.port, host="0.0.0.0", log_level="warning"
+        app, port=config.hiyori_UI_config.port, host="0.0.0.0", log_level="warning"
     )
