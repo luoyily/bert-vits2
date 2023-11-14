@@ -7,13 +7,13 @@ import commons
 import torch
 from transformers import AutoTokenizer
 from text.japanese_bert import get_bert_feature
+from infer import latest_version
 from mel_processing import spectrogram_torch
 import h5py
 import json
 from multiprocessing import Pool
 from functools import partial
 from config import config
-
 
 """
 将所有数据预处理步骤全部集合在这 (方便一路单步调试到底(bushi))
@@ -36,7 +36,6 @@ filelist格式:
 
 folder1/file1.ogg|{speaker_name}|{language}|{text}
 """
-
 
 train_file_list = config.data_pack_config.train_filelist  # 训练集文件
 train_audio_root = config.data_pack_config.train_audios  # 训练集音频目
@@ -72,11 +71,12 @@ def filter_data_and_build_config(file_list_path: str, audio_root: str):
             if speaker not in speaker_id_map.keys():
                 speaker_id_map[speaker] = current_sid
                 current_sid += 1
-    print(f"Skiped {len(data_list)-len(filtered_list)} items.")
+    print(f"Skiped {len(data_list) - len(filtered_list)} items.")
     json_config = json.load(open(config_in, encoding="utf-8"))
     json_config["data"]["spk2id"] = speaker_id_map
     json_config["data"]["train_root"] = train_output_root
     json_config["data"]["eval_root"] = eval_output_root
+    json_config["version"] = latest_version
 
     with open(config_out, "w", encoding="utf-8") as f:
         json.dump(json_config, f, indent=2, ensure_ascii=False)
@@ -90,7 +90,7 @@ def pack_item(line, speaker_id_map, audio_root, output_root):
     # audio,spec Tensor
     # clamp 处理音频超过范围的值（暂不确定是否有影响）
     audio_norm = torch.FloatTensor(audio_res).unsqueeze(0).clamp(-1, 1)
-    spec = spectrogram_torch(audio_norm,2048,44100,512,2048,center=False,).squeeze(0)
+    spec = spectrogram_torch(audio_norm, 2048, 44100, 512, 2048, center=False, ).squeeze(0)
 
     # 预处理文本，获取文本bert结果
     norm_text, phones, tones, word2ph = clean_text(text, language)
@@ -133,9 +133,9 @@ if __name__ == "__main__":
     tokenizer = AutoTokenizer.from_pretrained("./bert/deberta-v2-large-japanese")
     # 多进程处理训练集
     filtered_list, speaker_id_map = filter_data_and_build_config(train_file_list, train_audio_root)
-    partial_pack_item = partial(pack_item,speaker_id_map=speaker_id_map,audio_root=train_audio_root,output_root=train_output_root,)
+    partial_pack_item = partial(pack_item, speaker_id_map=speaker_id_map, audio_root=train_audio_root, output_root=train_output_root, )
     with Pool(processes=num_processes) as pool:
-        for _ in tqdm(pool.imap_unordered(partial_pack_item, filtered_list),total=len(filtered_list),):
+        for _ in tqdm(pool.imap_unordered(partial_pack_item, filtered_list), total=len(filtered_list), ):
             pass
     # 处理验证集 注：speaker_id_map需使用训练集的，即与配置文件一致
     eval_filtered_list, _ = filter_data_and_build_config(eval_file_list, eval_audio_root)
